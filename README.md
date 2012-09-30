@@ -1,14 +1,26 @@
-ZendMuscleApplication
-=====================
+ZendSkeletonApplication++ (An Enhanced Skeleton)
+================================================
 
 Introduction
 ------------
-This is a more enhanced, muscular version of the ZF2 skeleton application.
-It demonstrates the usage of basic components such as Zend\Authentication
-and Zend\Cache.
+This skeleton-ish application demonstrates various components of ZF2 in action. It
+has examples for fairly commonly needed capabilities such as:
 
-This application is meant to demonstrate the various components in ZF2 
-in a way that can be seen in action from start to finish.
+* Authentication via Form
+* Login Forms (Rendering, Submitting, Validating, Processing)
+* Session Handling with Custom Cached Storage Options (uses memcached)
+* Form Error Handling
+
+If you'd like to add another common capability, please submit pull requests.
+
+Desired (need contributors):
+
+* Demonstrate Zend\Navigation
+* Demonstrate more Zend\Db capabilities
+* Demonstrate Zend\Permissions\Acl
+* Demonstrate Zend\Cache (APC?)
+* Demonstrate REST controllers, routing, header-based versions and response type (accepts)
+* ... other suggestions? what would you like to see demonstrated?
 
 Installation
 ------------
