@@ -16,6 +16,9 @@ use Zend\Authentication\AuthenticationService;
 use Zend\Authentication\Storage\Session as SessionStorage;
 use Zend\Authentication\Storage\StorageInterface;
 use Zend\Cache\Storage\Adapter\Memcached;
+use Zend\Cache\Storage\Adapter\MemcachedOptions;
+use Zend\Session\SessionManager;
+use Zend\Session\SaveHandler\Cache;
 
 class Module
 {
@@ -66,9 +69,13 @@ class Module
                 'Zend\Authentication\AuthenticationService' => function($serviceManager) {
                     $config = $serviceManager->get('config');
                     $config = $config['memcached'];
-                    $memcachedStorage = new Memcached($config);
+                    $memcachedOptions = new MemcachedOptions($config);
+                    $memcachedStorage = new Memcached($memcachedOptions);
                     $authService = new AuthenticationService();
-                    $authService->setStorage($memcachedStorage);
+                    $memcachedSaveHandler = new \Zend\Session\SaveHandler\Cache($memcachedStorage);
+                    $sessionManager = new SessionManager(null, null, $memcachedSaveHandler);
+                    $sessionStorage = new SessionStorage(null, null, $sessionManager);
+                    $authService->setStorage($sessionStorage);
                     return $authService;
                 },
             ),

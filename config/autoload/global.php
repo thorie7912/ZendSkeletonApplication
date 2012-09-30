@@ -14,7 +14,7 @@
 return array(
     'db' => array(
         'driver'         => 'Pdo',
-        'dsn'            => 'mysql:dbname=dashboard;host=localhost',
+        'dsn'            => 'mysql:dbname=skeleton;host=localhost',
         'driver_options' => array(
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
         ),
@@ -22,7 +22,9 @@ return array(
         'password' => 'do-not-modify', // put password in local.php, not here
     ),
     'memcached' => array(
-        'servers' => array('localhost:11211'),
+        'servers' => array(
+            array('localhost', 11211),
+        ),
     ),
     'service_manager' => array(
         'factories' => array(

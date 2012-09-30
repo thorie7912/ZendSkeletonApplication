@@ -33,3 +33,24 @@ Virtual Host
 ------------
 Afterwards, set up a virtual host to point to the public/ directory of the
 project and you should be ready to go!
+
+```sql
+CREATE DATABASE `skeleton`;
+
+GRANT ALL ON `skeleton`.* TO 'myuser'@'localhost' IDENTIFIED BY 'mypass';
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(128) NOT NULL,
+  `firstName` varchar(128) NOT NULL,
+  `lastName` varchar(128) NOT NULL,
+  `password` varchar(128) NOT NULL,
+  `status` varchar(128) DEFAULT '' NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+insert into users (email,firstName,lastName,password) values('test@test.com', 'John', 'Doe', PASSWORD('test'));
+
+```

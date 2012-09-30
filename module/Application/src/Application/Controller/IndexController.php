@@ -27,7 +27,6 @@ class IndexController extends AbstractActionController
         if ($identity) {
             return array('email' => $identity);
         }
-
         return array('loggedIn' => false, 'form' => new LoginForm());
     }
 
@@ -50,21 +49,25 @@ class IndexController extends AbstractActionController
                 $serviceManager = $this->getServiceLocator();
 
                 $authAdapter = $serviceManager->get('Zend\Authentication\Adapter\DbTable');
-                $authAdapter->setTableName('accounts')
+                $authAdapter->setTableName('users')
                     ->setIdentityColumn('email')
                     ->setCredentialColumn('password')
+                    ->setCredentialTreatment('PASSWORD(?)')
                     ->setIdentity($email)
                     ->setCredential($password);
 
                 $select = $authAdapter->getDbSelect();
-                $select->where('dashboard_access = 1');
+                $select->where('status != "deleted"');
 
                 $authService = $serviceManager->get('Zend\Authentication\AuthenticationService');
                 $result = $authService->authenticate($authAdapter);
 
+
                 if ($result->isValid()) {
                     // Login successful, redirect to stats overview page
                     return $this->redirect()->toRoute('home');
+                } else {
+                    $form->get('email')->setMessages($result->getMessages());
                 }
 
             }
