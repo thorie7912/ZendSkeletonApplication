@@ -29,10 +29,23 @@ Alternatively, you can install using native git submodules:
 
     git clone git://github.com/thorie7912/ZendSkeletonApplication.git --recursive
 
-Virtual Host
-------------
-Afterwards, set up a virtual host to point to the public/ directory of the
-project and you should be ready to go!
+Setup and Run Memcached
+-----------------------
+
+Something like... (depends on your system)
+
+    apt-get install memcached
+    /etc/init.d/memcached start
+
+Also, be sure you have the memcached PHP extension
+
+    php -i | grep memcached
+
+
+Prepare Your Database
+---------------------
+
+Here are some mysql commands you can use to get you started
 
 ```sql
 CREATE DATABASE `skeleton`;
@@ -54,3 +67,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 insert into users (email,firstName,lastName,password) values('test@test.com', 'John', 'Doe', PASSWORD('test'));
 
 ```
+Virtual Host
+------------
+Afterwards, set up a virtual host to point to the public/ directory of the
+project and you should be ready to go!
