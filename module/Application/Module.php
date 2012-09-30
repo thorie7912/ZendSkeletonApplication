@@ -74,7 +74,7 @@ class Module
 
                     $config = $serviceManager->get('config');
 
-                    try {
+                    /*try {
                         $memcachedConfig = $config['memcached'];
                         $memcachedOptions = new MemcachedOptions($memcachedConfig);
                         $memcachedStorage = new Memcached($memcachedOptions);
@@ -84,11 +84,12 @@ class Module
                         $sessionStorage = new SessionStorage('Zend_Auth', 'storage', $sessionManager);
                         $authService->setStorage($sessionStorage);
 
-                    } catch (RuntimeException $e) {
+                    } catch (RuntimeException $e) {*/
 
                         // If memcached sessions fail, fall back to database sessions
 
                         $authService = new AuthenticationService();
+
                         $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
 
                         $sessionTableGatewayOptions = new DbTableGatewayOptions();
@@ -100,14 +101,26 @@ class Module
 
                         $sessionTableGateway = new TableGateway('sessions', $dbAdapter);
                         $dbSaveHandler = new DbTableGateway($sessionTableGateway, $sessionTableGatewayOptions);
-                        $sessionManager = new SessionManager(null, null, $dbSaveHandler);
+
+
+
+                        $storage = new \Zend\Session\Storage\SessionStorage();
+
+
+                        //$saveHandler = new \Zend\Session\SaveHandler\
+
+
+                        $sessionManager = new SessionManager(null, $storage, $dbSaveHandler);
+
                         $sessionStorage = new SessionStorage('Zend_Auth', 'storage', $sessionManager);
-
+/*
                         //$sessionStorage->write('abc');
+                         */
 
-                        $authService->setStorage($sessionStorage);
+                        $authService = new AuthenticationService();
+                        //$authService->setStorage($sessionStorage);
 
-                    }
+                    //}
 
                     return $authService;
                 },
