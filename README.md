@@ -1,14 +1,29 @@
-ZendMuscleApplication
-=====================
+ZendSkeletonApplication++ (An Enhanced Skeleton)
+================================================
 
 Introduction
 ------------
-This is a more enhanced, muscular version of the ZF2 skeleton application.
-It demonstrates the usage of basic components such as Zend\Authentication
-and Zend\Cache.
+This skeleton-ish application demonstrates various components of ZF2 in action. It
+has examples for fairly commonly needed capabilities such as:
 
 This application is meant to demonstrate the various components in ZF2
 in a way that can be seen in action from start to finish.
+
+* Authentication via Form
+* Login Forms (Rendering, Submitting, Validating, Processing)
+* Session Handling with Custom Cached Storage Options (uses memcached)
+* Form Error Handling
+
+If you'd like to add another common capability, please submit pull requests.
+
+Desired (need contributors):
+
+* Demonstrate Zend\Navigation
+* Demonstrate more Zend\Db capabilities
+* Demonstrate Zend\Permissions\Acl
+* Demonstrate Zend\Cache (APC?)
+* Demonstrate REST controllers, routing, header-based versions and response type (accepts)
+* ... other suggestions? what would you like to see demonstrated?
 
 Installation
 ------------
@@ -29,10 +44,23 @@ Alternatively, you can install using native git submodules:
 
     git clone git://github.com/thorie7912/ZendSkeletonApplication.git --recursive
 
-Virtual Host
-------------
-Afterwards, set up a virtual host to point to the public/ directory of the
-project and you should be ready to go!
+Setup and Run Memcached
+-----------------------
+
+Something like... (depends on your system)
+
+    apt-get install memcached
+    /etc/init.d/memcached start
+
+Also, be sure you have the memcached PHP extension
+
+    php -i | grep memcached
+
+
+Prepare Your Database
+---------------------
+
+Here are some mysql commands you can use to get you started
 
 ```sql
 CREATE DATABASE `skeleton`;
@@ -56,10 +84,15 @@ insert into users (email,firstName,lastName,password) values('test@test.com', 'J
 CREATE TABLE IF NOT EXISTS `sessions` (
   `id` varchar(60) NOT NULL,
   `data` longtext NOT NULL,
-  `expires` datetime NOT NULL,
-  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `name` varchar(60) NOT NULL,
+  `lifetime` int(10) unsigned,
+  `modified` int(10) unsigned,
+  `name` varchar(60) DEFAULT 'PHPSESSID',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
 ```
+Virtual Host
+------------
+Afterwards, set up a virtual host to point to the public/ directory of the
+project and you should be ready to go!
