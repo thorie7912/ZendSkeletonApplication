@@ -1,12 +1,14 @@
-ZendSkeletonApplication
-=======================
+ZendMuscleApplication
+=====================
 
 Introduction
 ------------
-This is a simple, skeleton application using the ZF2 MVC layer and module
-systems. This application is meant to be used as a starting place for those
-looking to get their feet wet with ZF2.
+This is a more enhanced, muscular version of the ZF2 skeleton application.
+It demonstrates the usage of basic components such as Zend\Authentication
+and Zend\Cache.
 
+This application is meant to demonstrate the various components in ZF2 
+in a way that can be seen in action from start to finish.
 
 Installation
 ------------
@@ -17,7 +19,7 @@ The recommended way to get a working copy of this project is to clone the reposi
 and use composer to install dependencies:
 
     cd my/project/dir
-    git clone git://github.com/zendframework/ZendSkeletonApplication.git
+    git clone git://github.com/thorie7912/ZendSkeletonApplication.git
     cd ZendSkeletonApplication
     php composer.phar install
 
@@ -25,7 +27,7 @@ Using Git submodules
 --------------------
 Alternatively, you can install using native git submodules:
 
-    git clone git://github.com/zendframework/ZendSkeletonApplication.git --recursive
+    git clone git://github.com/thorie7912/ZendSkeletonApplication.git --recursive
 
 Virtual Host
 ------------
