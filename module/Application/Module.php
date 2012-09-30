@@ -18,7 +18,11 @@ use Zend\Authentication\Storage\StorageInterface;
 use Zend\Cache\Storage\Adapter\Memcached;
 use Zend\Cache\Storage\Adapter\MemcachedOptions;
 use Zend\Session\SessionManager;
-use Zend\Session\SaveHandler\Cache;
+use Zend\Session\SaveHandler\Cache as SaveHandlerCache;
+use Zend\Db\TableGateway\TableGateway;
+use Zend\Session\SaveHandler\DbTableGateway;
+use Zend\Session\SaveHandler\DbTableGatewayOptions;
+use Zend\Cache\Exception\RuntimeException;
 
 class Module
 {
@@ -50,15 +54,15 @@ class Module
     {
         return array(
             'factories' => array(
-                'Application\Model\AccountTable' => function($serviceManager) {
+                'Application\Model\SessionTable' => function($serviceManager) {
                     $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
-                    $table = new AccountTable($dbAdapter);
+                    $table = new Model\SessionTable($dbAdapter);
                     return $table;
                 },
                 'Zend\Db\Adapter\Adapter' => function($serviceManager) {
                     $config = $serviceManager->get('config');
-                    $config = $config['db'];
-                    $dbAdapter = new DbAdapter($config);
+                    $dbConfig = $config['db'];
+                    $dbAdapter = new DbAdapter($dbConfig);
                     return $dbAdapter;
                 },
                 'Zend\Authentication\Adapter\DbTable' => function($serviceManager) {
@@ -67,15 +71,44 @@ class Module
                     return $authAdapter;
                 },
                 'Zend\Authentication\AuthenticationService' => function($serviceManager) {
+
                     $config = $serviceManager->get('config');
-                    $config = $config['memcached'];
-                    $memcachedOptions = new MemcachedOptions($config);
-                    $memcachedStorage = new Memcached($memcachedOptions);
-                    $authService = new AuthenticationService();
-                    $memcachedSaveHandler = new \Zend\Session\SaveHandler\Cache($memcachedStorage);
-                    $sessionManager = new SessionManager(null, null, $memcachedSaveHandler);
-                    $sessionStorage = new SessionStorage(null, null, $sessionManager);
-                    $authService->setStorage($sessionStorage);
+
+                    try {
+                        $memcachedConfig = $config['memcached'];
+                        $memcachedOptions = new MemcachedOptions($memcachedConfig);
+                        $memcachedStorage = new Memcached($memcachedOptions);
+                        $authService = new AuthenticationService();
+                        $memcachedSaveHandler = new SaveHandlerCache($memcachedStorage);
+                        $sessionManager = new SessionManager(null, null, $memcachedSaveHandler);
+                        $sessionStorage = new SessionStorage('Zend_Auth', 'storage', $sessionManager);
+                        $authService->setStorage($sessionStorage);
+
+                    } catch (RuntimeException $e) {
+
+                        // If memcached sessions fail, fall back to database sessions
+
+                        $authService = new AuthenticationService();
+                        $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
+
+                        $sessionTableGatewayOptions = new DbTableGatewayOptions();
+                        $sessionTableGatewayOptions->setDataColumn('data')
+                                ->setIdColumn('id')
+                                ->setLifetimeColumn('lifetime')
+                                ->setModifiedColumn('modified')
+                                ->setNameColumn('name');
+
+                        $sessionTableGateway = new TableGateway('sessions', $dbAdapter);
+                        $dbSaveHandler = new DbTableGateway($sessionTableGateway, $sessionTableGatewayOptions);
+                        $sessionManager = new SessionManager(null, null, $dbSaveHandler);
+                        $sessionStorage = new SessionStorage('Zend_Auth', 'storage', $sessionManager);
+
+                        //$sessionStorage->write('abc');
+
+                        $authService->setStorage($sessionStorage);
+
+                    }
+
                     return $authService;
                 },
             ),

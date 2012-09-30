@@ -6,16 +6,16 @@ use Zend\Db\Adapter\Adapter;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\TableGateway\AbstractTableGateway;
 
-class AccountTable extends AbstractTableGateway
+class SessionTable extends AbstractTableGateway
 {
-    protected $table ='accounts';
+    protected $table ='sessions';
 
     public function __construct(Adapter $adapter)
     {
         $this->adapter = $adapter;
 
         $this->resultSetPrototype = new ResultSet();
-        $this->resultSetPrototype->setArrayObjectPrototype(new Album());
+        $this->resultSetPrototype->setArrayObjectPrototype(new Session());
 
         $this->initialize();
     }

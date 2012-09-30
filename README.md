@@ -7,7 +7,7 @@ This is a more enhanced, muscular version of the ZF2 skeleton application.
 It demonstrates the usage of basic components such as Zend\Authentication
 and Zend\Cache.
 
-This application is meant to demonstrate the various components in ZF2 
+This application is meant to demonstrate the various components in ZF2
 in a way that can be seen in action from start to finish.
 
 Installation
@@ -52,5 +52,14 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 insert into users (email,firstName,lastName,password) values('test@test.com', 'John', 'Doe', PASSWORD('test'));
+
+CREATE TABLE IF NOT EXISTS `sessions` (
+  `id` varchar(60) NOT NULL,
+  `data` longtext NOT NULL,
+  `expires` datetime NOT NULL,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `name` varchar(60) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ```
