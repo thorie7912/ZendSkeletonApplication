@@ -10,13 +10,19 @@
 namespace Application;
 
 use Zend\Mvc\ModuleRouteListener;
+use Zend\Db\Adapter\Adapter as DbAdapter;
+use Zend\Authentication\Adapter\DbTable as AuthAdapter;
+use Zend\Authentication\AuthenticationService;
+use Zend\Authentication\Storage\Session as SessionStorage;
+use Zend\Authentication\Storage\StorageInterface;
+use Zend\Cache\Storage\Adapter\Memcached;
 
 class Module
 {
-    public function onBootstrap($e)
+    public function onBootstrap($event)
     {
-        $e->getApplication()->getServiceManager()->get('translator');
-        $eventManager        = $e->getApplication()->getEventManager();
+        $event->getApplication()->getServiceManager()->get('translator');
+        $eventManager = $event->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
     }
@@ -36,4 +42,37 @@ class Module
             ),
         );
     }
+
+    public function getServiceConfig()
+    {
+        return array(
+            'factories' => array(
+                'Application\Model\AccountTable' => function($serviceManager) {
+                    $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
+                    $table = new AccountTable($dbAdapter);
+                    return $table;
+                },
+                'Zend\Db\Adapter\Adapter' => function($serviceManager) {
+                    $config = $serviceManager->get('config');
+                    $config = $config['db'];
+                    $dbAdapter = new DbAdapter($config);
+                    return $dbAdapter;
+                },
+                'Zend\Authentication\Adapter\DbTable' => function($serviceManager) {
+                    $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
+                    $authAdapter = new AuthAdapter($dbAdapter);
+                    return $authAdapter;
+                },
+                'Zend\Authentication\AuthenticationService' => function($serviceManager) {
+                    $config = $serviceManager->get('config');
+                    $config = $config['memcached'];
+                    $memcachedStorage = new Memcached($config);
+                    $authService = new AuthenticationService();
+                    $authService->setStorage($memcachedStorage);
+                    return $authService;
+                },
+            ),
+        );
+    }
+
 }

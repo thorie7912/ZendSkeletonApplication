@@ -1,0 +1,13 @@
+<?php
+//echo $this->form;
+
+//var_dump($this->form);
+
+$form = $this->form;
+$form->prepare();
+
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('email'));
+echo $this->formRow($form->get('password'));
+echo $this->formSubmit($form->get('submit'));
+echo $this->form()->closeTag();

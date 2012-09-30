@@ -6,6 +6,25 @@
 
 <div class="row">
 
+    <div class="span12">
+    <?php if (!$this->email) { ?>
+        <h2><?php echo $this->translate('Login') ?></h2>
+        <?php
+            $form = $this->form;
+            $form->prepare();
+
+            echo $this->form()->openTag($form);
+            echo $this->formRow($form->get('email'));
+            echo $this->formRow($form->get('password'));
+            echo $this->formSubmit($form->get('submit'));
+            echo $this->form()->closeTag();
+        ?>
+    <?php } else { ?>
+        <h2><?php echo $this->translate('Logged In') ?></h2>
+        <?php echo $this->translate('You are logged in as ') ?> <?=$this->email?> | <a href='/application/index/logout'>Logout</a>
+        <hr>
+    <?php } ?>
+    </div>
     <div class="span4">
         <h2><?php echo $this->translate('Follow Development') ?></h2>
         <p><?php echo sprintf($this->translate('Zend Framework 2 is under active development. If you are interested in following the development of ZF2, there is a special ZF2 portal on the official Zend Framework website which provides links to the ZF2 %swiki%s, %sdev blog%s, %sissue tracker%s, and much more. This is a great resource for staying up to date with the latest developments!'), '<a href="http://framework.zend.com/wiki/display/ZFDEV2/Home">', '</a>', '<a href="http://framework.zend.com/zf2/blog">', '</a>', '<a href="http://framework.zend.com/issues/browse/ZF2">', '</a>') ?></p>
