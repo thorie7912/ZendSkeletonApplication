@@ -11,4 +11,3 @@ include 'init_autoloader.php';
 // Run the application!
 Zend\Mvc\Application::init(include 'config/application.config.php')->run();
 
-echo "This print is line 13 in index.php.... after Application::init()->run()You will see shutdown errors now...\n<BR><BR><HR> ";
