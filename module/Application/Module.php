@@ -32,6 +32,8 @@ class Module
         $eventManager = $event->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
+
+        $eventManager->attach('finish', array($this, 'writeCloseSession'));
     }
 
     public function getConfig()
@@ -50,14 +52,90 @@ class Module
         );
     }
 
+    /**
+     * Workaround for issue https://github.com/zendframework/zf2/issues/2628
+     * @param \Zend\Mvc\MvcEvent $event
+     */
+    public function writeCloseSession(\Zend\Mvc\MvcEvent $event)
+    {
+        $serviceManager = $event->getApplication()->getServiceManager();
+
+        if (!$serviceManager->has('Zend\Session\SessionManager')) {
+            return;
+        }
+
+        $sessionManager = $serviceManager->get('Zend\Session\SessionManager');
+        $saveHandler = $sessionManager->getSaveHandler();
+
+        // Only if the saveHandler is DbTable (not memcached) do we want to
+        // apply the bug workaround writeClose() call here.
+        if ('Zend\Session\SaveHandler\DbTableGateway' == get_class($saveHandler)) {
+            $sessionManager->writeClose();
+        }
+    }
+
     public function getServiceConfig()
     {
         return array(
             'factories' => array(
-                'Application\Model\SessionTable' => function($serviceManager) {
+                /*'Application\Model\SessionTable' => function($serviceManager) {
                     $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
                     $table = new Model\SessionTable($dbAdapter);
                     return $table;
+                },*/
+                'Zend\Authentication\Storage\Session' => function($serviceManager) {
+
+                    $config = $serviceManager->get('config');
+
+                    $sessionManager = new SessionManager();
+
+                    try {
+
+                        $memcachedConfig = $config['memcached'];
+                        $memcachedOptions = new MemcachedOptions($memcachedConfig);
+                        $memcachedStorage = new Memcached($memcachedOptions);
+
+                        // Calling getAvailableSpace() before starting the session will prevent the
+                        // session from being stored before getting a chance to fall-back to DB sessions.
+                        // This will prevent memcached as being set as the session handler when it
+                        // is unavailable (causing various problems, such as __destruct() exceptions).
+                        // The trick is, getAvailableSpace will throw an exception before the
+                        // subsequent session code has a chance to lock in memcached as the handler.
+                        $space = $memcachedStorage->getAvailableSpace();
+
+                        if ($space < 0) {
+                            throw new RuntimeException('Memcached is out of space');
+                        }
+
+                        $memcachedSaveHandler = new SaveHandlerCache($memcachedStorage);
+                        $sessionManager->setSaveHandler($memcachedSaveHandler);
+                        $sessionStorage = new SessionStorage('MemcachedSession', null, $sessionManager);
+
+                    } catch (RuntimeException $e) {
+
+                        // If memcached sessions fail, fall back to database sessions
+
+                        $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
+                        $sessionTableGatewayOptions = new DbTableGatewayOptions();
+                        $sessionTableGatewayOptions->setDataColumn('data')
+                                ->setIdColumn('id')
+                                ->setLifetimeColumn('lifetime')
+                                ->setModifiedColumn('modified')
+                                ->setNameColumn('name');
+
+                        $sessionTableGateway = new TableGateway('sessions', $dbAdapter);
+                        $dbSaveHandler = new DbTableGateway($sessionTableGateway, $sessionTableGatewayOptions);
+                        $sessionManager->setSaveHandler($dbSaveHandler);
+                        $sessionStorage = new SessionStorage('DbSession', 'storage', $sessionManager);
+
+
+                    }
+
+                    $serviceManager->setService('Zend\Session\SessionManager', $sessionManager);
+
+
+                    return $sessionStorage;
+
                 },
                 'Zend\Db\Adapter\Adapter' => function($serviceManager) {
                     $config = $serviceManager->get('config');
@@ -72,55 +150,9 @@ class Module
                 },
                 'Zend\Authentication\AuthenticationService' => function($serviceManager) {
 
-                    $config = $serviceManager->get('config');
-
-                    /*try {
-                        $memcachedConfig = $config['memcached'];
-                        $memcachedOptions = new MemcachedOptions($memcachedConfig);
-                        $memcachedStorage = new Memcached($memcachedOptions);
-                        $authService = new AuthenticationService();
-                        $memcachedSaveHandler = new SaveHandlerCache($memcachedStorage);
-                        $sessionManager = new SessionManager(null, null, $memcachedSaveHandler);
-                        $sessionStorage = new SessionStorage('Zend_Auth', 'storage', $sessionManager);
-                        $authService->setStorage($sessionStorage);
-
-                    } catch (RuntimeException $e) {*/
-
-                        // If memcached sessions fail, fall back to database sessions
-
-                        $authService = new AuthenticationService();
-
-                        $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
-
-                        $sessionTableGatewayOptions = new DbTableGatewayOptions();
-                        $sessionTableGatewayOptions->setDataColumn('data')
-                                ->setIdColumn('id')
-                                ->setLifetimeColumn('lifetime')
-                                ->setModifiedColumn('modified')
-                                ->setNameColumn('name');
-
-                        $sessionTableGateway = new TableGateway('sessions', $dbAdapter);
-                        $dbSaveHandler = new DbTableGateway($sessionTableGateway, $sessionTableGatewayOptions);
-
-
-
-                        $storage = new \Zend\Session\Storage\SessionStorage();
-
-
-                        //$saveHandler = new \Zend\Session\SaveHandler\
-
-
-                        $sessionManager = new SessionManager(null, $storage, $dbSaveHandler);
-
-                        $sessionStorage = new SessionStorage('Zend_Auth', 'storage', $sessionManager);
-/*
-                        //$sessionStorage->write('abc');
-                         */
-
-                        $authService = new AuthenticationService();
-                        //$authService->setStorage($sessionStorage);
-
-                    //}
+                    $authService = new AuthenticationService();
+                    $sessionStorage = $serviceManager->get('Zend\Authentication\Storage\Session');
+                    $authService->setStorage($sessionStorage);
 
                     return $authService;
                 },
